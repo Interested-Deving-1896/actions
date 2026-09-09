@@ -24,7 +24,7 @@ jobs:
     name: Install Knative Eventing and verify it comes up
     steps:
       - name: Harden the runner (Audit all outbound calls)
-        uses: step-security/harden-runner@b09bb98e06d4d774595224525879c09bc6e98c40 # v2.20.1
+        uses: step-security/harden-runner@e14015d583714f6e62063499dc959a02595150a1 # v2.21.1
         with:
           egress-policy: audit # TODO(harden-runner): switch to block once IPv6 multicast (ff02::1) is supported (kind uses Docker container networking)
 
@@ -50,4 +50,4 @@ jobs:
 
       - name: Collect diagnostics
         if: ${{ failure() }}
-        uses: chainguard-dev/actions/kind-diag@9d631658f55713e5f63ca0cc21ee168f81301fd9 # v1.6.30
+        uses: chainguard-dev/actions/kind-diag@a9d4aa7202a63f8a6b8f81bb1570a0ca54460ac5 # v1.6.34

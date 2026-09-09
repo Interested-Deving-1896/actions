@@ -19,7 +19,7 @@ jobs:
       contents: read
 
     steps:
-      - uses: step-security/harden-runner@b09bb98e06d4d774595224525879c09bc6e98c40 # v2.20.1
+      - uses: step-security/harden-runner@e14015d583714f6e62063499dc959a02595150a1 # v2.21.1
         with:
           egress-policy: block
           allowed-endpoints: >
@@ -38,6 +38,6 @@ jobs:
           set -xv
           yamls=$(find . -name "*.y*ml" -not -path "*/.chainguard/source.yaml" -not -path "*/action.y*ml" -not -path "*/.github/chainguard/release.sts.yaml" -not -path "./.github/*.yml" -not -path "./.github/*.yaml" -exec echo {} +)
           echo "files=${yamls}" >> "$GITHUB_OUTPUT"
-      - uses: reviewdog/action-actionlint@d63ba7532e0942965320cd8d73cbae4c7b3c5283 # v1.73.1
+      - uses: reviewdog/action-actionlint@49cb3ce06e5d81452e14b38ad34e4b12a8acfe2b # v1.73.3
         with:
           actionlint_flags: ${{ steps.get_yamls.outputs.files }}
