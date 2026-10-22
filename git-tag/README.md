@@ -17,12 +17,13 @@ It uses [fsaintjacques/semver-tool](https://github.com/fsaintjacques/semver-tool
 | Name            | Description                                                                                 | Required | Default |
 |-----------------|---------------------------------------------------------------------------------------------|----------|---------|
 | `bump_level`    | Which part of the SemVer version to increment: `major`, `minor`, `patch`, `prerelease`, or `build`. | ✅       | `build` |
+| `prerelease_label` | Label for prerelease versions, used with `bump_level: prerelease`                        | ❌       | `rc`    |
 | `git_tag_prefix`| Git tag prefix (e.g. `v`)                                                                   | ✅       | `v`     |
 | `forced_version`| A SemVer-compatible version to force instead of bumping                                     | ❌       |         |
 | `dry_run`       | If `true`, do not push any tags (for testing purposes)                                      | ✅       | `false` |
 | `token`         | GitHub token required to authenticate and push the tag                                      | ❌       |  `GITHUB_TOKEN`       |
-| `author`        | The author name and email address (format: `Display Name <email@address.com>`)              | ❌       | `$github.actor <$github.actor_id+$github.actor@users.noreply.github.com>` |
-| `committer`     | The committer name and email address (format: `Display Name <email@address.com>`)           | ❌       | github-actions[bot] <41898282+github-actions[bot]@users.noreply.github.com>  |
+| `author`        | Deprecated and unused: a tag has only a tagger, taken from `committer`                      | ❌       | `$github.actor <$github.actor_id+$github.actor@users.noreply.github.com>` |
+| `committer`     | The tagger name and email address (format: `Display Name <email@address.com>`)              | ❌       | github-actions[bot] <41898282+github-actions[bot]@users.noreply.github.com>  |
 | `use-gitsign`   | Use gitsign to sign commits                                                                 | ❌       |   `true`      |
 
 ## 📦 Outputs
@@ -47,7 +48,6 @@ jobs:
           git_tag_prefix: v
           dry_run: false
           token: ${{ steps.octo-sts.outputs.token }}
-          author: "octo-sts[bot] <157150467+octo-sts[bot]@users.noreply.github.com>"
           committer: "octo-sts[bot] <157150467+octo-sts[bot]@users.noreply.github.com>"
 ```
 
@@ -62,12 +62,35 @@ When using `bump_level: build`, the version includes build metadata based on the
 ```
 This provides a sortable, unique identifier for CI-generated builds.
 
+### Prerelease Versions
+
+A prerelease sorts before the release it belongs to ([SemVer 2.0.0 §11](https://semver.org/#spec-item-11)),
+so `prerelease` and `patch` handle prerelease tags as follows:
+
+| Latest tag     | `bump_level`  | Result         |
+|----------------|---------------|----------------|
+| `v0.2.66`      | `prerelease`  | `v0.2.67-rc.1` |
+| `v0.2.67-rc.1` | `prerelease`  | `v0.2.67-rc.2` |
+| `v0.2.67-rc.2` | `patch`       | `v0.2.67`      |
+
+Set `prerelease_label` to use a label other than `rc`. Before this behavior,
+`prerelease` produced `v0.2.66-1` from `v0.2.66`; use `forced_version` if you
+need a specific prerelease version.
+
 ### Authentication
 
 The tag is pushed with the `token` input, not with credentials saved by
 `actions/checkout`. The checkout can therefore use `persist-credentials: false`,
 and when checkout does save credentials they are ignored for the push. The token
 needs `contents: write` on the repository.
+
+### Tagger identity
+
+git takes a tag's tagger from the committer identity, so the `committer` input
+sets the tagger. It is split into name and email and passed to `git tag` only,
+so git-tag itself does not change the job's git config. (`setup-gitsign`, used
+when `use-gitsign` is `true`, still sets a global `user.name` and `user.email`.)
+The `author` input has no effect.
 
 ### Edge Cases
 
