@@ -13,7 +13,7 @@ jobs:
       contents: read
 
     steps:
-    - uses: step-security/harden-runner@46b06cea07f9e64621fdf066ba77ac6915163d43 # v2.22.3
+    - uses: step-security/harden-runner@1d88384fd173af6ecb012dfd0264a306b711241a # v2.22.4
       with:
         egress-policy: block
         allowed-endpoints: >
@@ -32,6 +32,10 @@ jobs:
       env:
         EXTRA_INPUT_THIS_IS_EXAMPLE: hello
         EXTRA_INPUT_THIS_IS_ALSO_EXAMPLE: world
+        # Values that used to break or inject into the jq filter.
+        EXTRA_INPUT_WITH_QUOTE: 'a"b", "injected": "1'
+        EXTRA_INPUT_WITH_EQUALS: 'k=v=w'
+        EXTRA_INPUT_WITH_SPACE: 'hello world'
 
     - id: check-matrix-output
       env:
@@ -43,3 +47,7 @@ jobs:
         [[ "$(jq -r .y input.json)" == "2" ]]
         [[ "$(jq -r .thisIsExample input.json)" == "hello" ]]
         [[ "$(jq -r .thisIsAlsoExample input.json)" == "world" ]]
+        [[ "$(jq -r .withQuote input.json)" == 'a"b", "injected": "1' ]]
+        [[ "$(jq -r 'has("injected")' input.json)" == "false" ]]
+        [[ "$(jq -r .withEquals input.json)" == "k=v=w" ]]
+        [[ "$(jq -r .withSpace input.json)" == "hello world" ]]
