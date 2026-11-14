@@ -19,6 +19,11 @@ inputs:
     description: |
       Space separated list of dirs to search for go modules. Defaults to current directory.
     default: "."
+  goimports-version:
+    description: |
+      The golang.org/x/tools version to install goimports from.
+    required: false
+    default: "v0.52.0"
 
 runs:
   using: "composite"
@@ -27,9 +32,10 @@ runs:
     shell: bash
     env:
       GO111MODULE: on
+      GOIMPORTS_VERSION: ${{ inputs.goimports-version }}
     run: |
       cd "$(mktemp -d)" || exit
-      go install golang.org/x/tools/cmd/goimports@latest
+      go install "golang.org/x/tools/cmd/goimports@${GOIMPORTS_VERSION}"
 
   - name: goimports
     shell: bash
@@ -68,6 +74,6 @@ runs:
       done
 
   - name: Verify goimports
-    uses: chainguard-dev/actions/nodiff@794a2c44abbbd7b3a186db97b359270e4105448f # v1.8.0
+    uses: chainguard-dev/actions/nodiff@a25ce483d875a46f4c837e85e32e0fda602693f5 # v1.8.1
     with:
       fixup-command: "goimports"

@@ -104,9 +104,14 @@ runs:
         echo "create_pr_update=false" >> "$GITHUB_OUTPUT"
         if [[ $(git diff --stat) != '' ]]; then
           echo "create_pr_update=true" >> "$GITHUB_OUTPUT"
-          echo "diff<<EOF" >> "$GITHUB_OUTPUT"
-          git diff >> "$GITHUB_OUTPUT"
-          echo "EOF" >> "$GITHUB_OUTPUT"
+          # A random delimiter, so a diff line reading "EOF" can't end the
+          # value early and inject further outputs.
+          delim="EOF_$(od -An -tx1 -N16 /dev/urandom | tr -d ' \n')"
+          {
+            echo "diff<<${delim}"
+            git diff
+            echo "${delim}"
+          } >> "$GITHUB_OUTPUT"
         fi
 
     - name: Dry-run output
@@ -134,7 +139,7 @@ runs:
     # gh pr create does not cover what we rely on here: creating/updating the
     # branch, committing, and updating an existing PR in place.
     - name: Create Pull Request # zizmor: ignore[superfluous-actions]
-      uses: peter-evans/create-pull-request@15733dbdfeedb4f7fdb73d13c6f5ac83b710fab8 # v8.1.2
+      uses: peter-evans/create-pull-request@3ffccacd46053766916f087ce41d627c0b8cf2d1 # v8.1.3
       if: steps.create_pr_update.outputs.create_pr_update == 'true' && inputs.dry-run != 'true'
       id: pull_request
       with:
